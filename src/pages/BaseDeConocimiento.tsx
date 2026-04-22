@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { DriveFile, getStudyFiles, getFileDownloadUrl } from "../services/driveService";
 import { extractTextFromPdfUrl, extractTextFromPdfBuffer } from "../services/pdfService";
+import { extractTextFromDocxBuffer } from "../services/docxService";
 import { askGeminiAboutSources, generateStudioContent, generateSuggestedQuestions, ChatMessage } from "../services/geminiService";
 import { 
   FileText, Loader2, AlertCircle, Send, Bot, User as UserIcon, 
@@ -162,18 +163,34 @@ export default function BaseDeConocimiento() {
 
     try {
       let text = "";
-      const isPdf = source.mimeType === 'application/pdf' || source.name.toLowerCase().endsWith('.pdf');
-      const isDoc = source.mimeType === 'application/vnd.google-apps.document' || source.name.toLowerCase().endsWith('.txt');
+      const mime = source.mimeType?.toLowerCase() || '';
+      const name = source.name?.toLowerCase() || '';
+      
+      const isPdf = mime.includes('pdf') || name.endsWith('.pdf');
+      const isGoogleDoc = mime === 'application/vnd.google-apps.document';
+      const isDocx = mime.includes('wordprocessingml') || mime.includes('msword') || name.endsWith('.docx') || name.endsWith('.doc');
+      const isTxt = mime.includes('text/plain') || name.endsWith('.txt');
 
       if (source.type === 'drive') {
-        if (isPdf) {
-          const url = await getFileDownloadUrl(source.data.id, source.mimeType);
-          text = await extractTextFromPdfUrl(url);
-        } else if (isDoc) {
-          const url = await getFileDownloadUrl(source.data.id, source.mimeType);
+        if (isGoogleDoc) {
+          const url = await getFileDownloadUrl(source.data.id, 'application/vnd.google-apps.document');
           const response = await fetch(url);
           if(!response.ok) throw new Error("Fallo descargando texto.");
           text = await response.text();
+        } else if (isPdf || isDocx || isTxt) {
+          const url = await getFileDownloadUrl(source.data.id, source.mimeType);
+          const response = await fetch(url);
+          if(!response.ok) throw new Error("Fallo descargando el archivo.");
+          
+          const buffer = await response.arrayBuffer();
+          if (isPdf) {
+             text = await extractTextFromPdfBuffer(buffer);
+          } else if (isDocx) {
+             text = await extractTextFromDocxBuffer(buffer);
+          } else if (isTxt) {
+             const decoder = new TextDecoder('utf-8');
+             text = decoder.decode(buffer);
+          }
         } else {
            text = `[Archivo de Drive: ${source.name}]\nFormato secundario. Se detecta el archivo en la carpeta.`;
         }
@@ -181,11 +198,15 @@ export default function BaseDeConocimiento() {
         const file = source.data;
         // iOS Safari sometimes drops the mime type of local files, so we MUST check the name too
         const isLocalPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+        const isLocalDocx = file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || file.type === 'application/msword' || file.name.toLowerCase().endsWith('.docx') || file.name.toLowerCase().endsWith('.doc');
         const isLocalTxt = file.type === 'text/plain' || file.name.toLowerCase().endsWith('.txt');
         
         if (isLocalPdf) {
           const buffer = await file.arrayBuffer();
           text = await extractTextFromPdfBuffer(buffer);
+        } else if (isLocalDocx) {
+          const buffer = await file.arrayBuffer();
+          text = await extractTextFromDocxBuffer(buffer);
         } else if (isLocalTxt) {
           text = await file.text();
         } else {
@@ -359,7 +380,7 @@ export default function BaseDeConocimiento() {
             Estudio RAG Multifuente <Sparkles className="text-yellow-400" size={20} />
           </h1>
           <div className="flex flex-wrap items-center gap-3 mt-2">
-             <p className={`text-sm ${themeClasses.textMuted}`}>Analiza tus recursos como un experto.</p>
+             <p className={`text-sm ${themeClasses.textMuted} mr-2`}>Analiza tus recursos como un experto.</p>
              <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700">
                <span className={`text-[11px] font-bold ${enableSuggestions ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-500'}`}>Sugerencias IA</span>
                <button 
@@ -368,6 +389,25 @@ export default function BaseDeConocimiento() {
                >
                  <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${enableSuggestions ? 'translate-x-4' : 'translate-x-1'}`} />
                </button>
+             </div>
+             
+             {/* Quick Access Links */}
+             <div className="flex flex-wrap items-center gap-2 ml-0 md:ml-2">
+                <a title="Mi Carpeta Drive" href="https://drive.google.com/drive/folders/1HmB4SVm7WraN-4ELBxaEm3RcTjZ9t8Vq" target="_blank" rel="noopener noreferrer" 
+                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold transition-colors border shadow-sm ${isDark ? 'border-slate-700 bg-slate-800 text-cyan-400 hover:bg-slate-700' : 'border-gray-200 bg-white text-cyan-600 hover:bg-cyan-50'}`}>
+                  <Cloud size={14} className="shrink-0" />
+                  <span className="hidden sm:inline">Carpeta Drive</span>
+                </a>
+                <a title="NotebookLM AI" href="https://notebooklm.google.com/notebook/536ab9bb-432f-4a27-9565-cf9b1baabe48" target="_blank" rel="noopener noreferrer" 
+                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold transition-colors border shadow-sm ${isDark ? 'border-slate-700 bg-slate-800 text-pink-400 hover:bg-slate-700' : 'border-gray-200 bg-white text-pink-600 hover:bg-pink-50'}`}>
+                  <BrainCircuit size={14} className="shrink-0" />
+                  <span className="hidden sm:inline">NotebookLM</span>
+                </a>
+                <a title="Portal IPLACEX" href="https://www.iplacex.cl" target="_blank" rel="noopener noreferrer" 
+                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold transition-colors border shadow-sm ${isDark ? 'border-slate-700 bg-slate-800 text-indigo-400 hover:bg-slate-700' : 'border-gray-200 bg-white text-indigo-600 hover:bg-indigo-50'}`}>
+                  <GraduationCap size={14} className="shrink-0" />
+                  <span className="hidden sm:inline">IPLACEX</span>
+                </a>
              </div>
           </div>
         </div>
@@ -453,31 +493,12 @@ export default function BaseDeConocimiento() {
             )}
           </div>
 
-          <div className={`p-4 border-t flex flex-col gap-3 ${isDark ? 'border-slate-700' : 'border-gray-100'} shrink-0`}>
-             <div className="flex flex-col gap-2">
-                <p className={`text-[10px] font-bold uppercase tracking-wider ${themeClasses.textMuted}`}>Accesos Rápidos</p>
-                <a href="https://drive.google.com/drive/folders/1HmB4SVm7WraN-4ELBxaEm3RcTjZ9t8Vq" target="_blank" rel="noopener noreferrer" className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-colors border ${isDark ? 'border-slate-700 bg-slate-800 text-cyan-400 hover:bg-slate-700' : 'border-gray-200 bg-white text-cyan-600 hover:bg-cyan-50'}`}>
-                  <Cloud size={14} className="shrink-0" />
-                  <span className="truncate">Mi Carpeta Drive</span>
-                  <ExternalLink size={12} className="ml-auto shrink-0 opacity-50" />
-                </a>
-                <a href="https://notebooklm.google.com/notebook/536ab9bb-432f-4a27-9565-cf9b1baabe48" target="_blank" rel="noopener noreferrer" className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-colors border ${isDark ? 'border-slate-700 bg-slate-800 text-pink-400 hover:bg-slate-700' : 'border-gray-200 bg-white text-pink-600 hover:bg-pink-50'}`}>
-                  <BrainCircuit size={14} className="shrink-0" />
-                  <span className="truncate">NotebookLM AI</span>
-                  <ExternalLink size={12} className="ml-auto shrink-0 opacity-50" />
-                </a>
-                <a href="https://www.iplacex.cl" target="_blank" rel="noopener noreferrer" className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-colors border ${isDark ? 'border-slate-700 bg-slate-800 text-indigo-400 hover:bg-slate-700' : 'border-gray-200 bg-white text-indigo-600 hover:bg-indigo-50'}`}>
-                  <GraduationCap size={14} className="shrink-0" />
-                  <span className="truncate">Portal IPLACEX</span>
-                  <ExternalLink size={12} className="ml-auto shrink-0 opacity-50" />
-                </a>
-             </div>
-             <div className="h-px w-full bg-gradient-to-r from-transparent via-gray-300 dark:via-slate-600 to-transparent my-1"></div>
-             <input type="file" multiple ref={fileInputRef} onChange={handleLocalUpload} className="hidden" accept=".pdf,.txt,.doc,.docx" />
+          <div className={`p-4 border-t ${isDark ? 'border-slate-700' : 'border-gray-100'} shrink-0`}>
+             <input type="file" multiple ref={fileInputRef} onChange={handleLocalUpload} className="hidden" accept="application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,.pdf,.txt,.doc,.docx" />
              <button onClick={() => fileInputRef.current?.click()} className={`w-full flex items-center justify-center gap-2 py-3 border border-dashed rounded-xl text-sm font-medium transition-colors ${isDark ? 'border-slate-600 text-gray-300 hover:bg-slate-700' : 'border-gray-300 text-gray-600 hover:bg-gray-50'}`}>
                <Upload size={16} /> Carga Local Rapida
              </button>
-             <p className={`mt-2 text-[10px] text-center ${themeClasses.textMuted}`}>Las cargas locales desaparecen al refrescar. Para almacenar perenemente, súbelas a Drive.</p>
+             <p className={`mt-2 text-[10px] text-center ${themeClasses.textMuted}`}>Para almacenar permanentemente, sube a Drive.</p>
           </div>
         </div>
 
