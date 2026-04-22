@@ -1,8 +1,8 @@
 import * as pdfjsLib from 'pdfjs-dist';
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
-// Configurar el worker (esto soluciona problemas en entornos de navegador)
-// Usamos el CDN para evitar complicaciones con el bundler de Vite
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/\${pdfjsLib.version}/pdf.worker.min.mjs`;
+// Configurar el worker usando el archivo local empacado por Vite para evitar problemas con CDNs
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
 export async function extractTextFromPdfUrl(url: string): Promise<string> {
   try {

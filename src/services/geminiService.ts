@@ -8,9 +8,9 @@ export interface ChatMessage {
   text: string;
 }
 
-export async function askGeminiAboutPdf(
+export async function askGeminiAboutSources(
   question: string, 
-  pdfText: string, 
+  sourcesText: string, 
   history: ChatMessage[]
 ): Promise<string> {
   try {
@@ -28,23 +28,54 @@ export async function askGeminiAboutPdf(
       model: 'gemini-2.5-flash',
       contents: contents,
       config: {
-        systemInstruction: `Eres Gilda, una asistente de estudio experta y amigable.
-Tu objetivo principal es responder a las preguntas del estudiante basándote ESTRICTAMENTE en el texto de los apuntes proporcionado a continuación.
-Si la respuesta no se encuentra en el texto, debes aclarar amablemente que no tienes esa información en los documentos actuales.
+        systemInstruction: `Eres Gilda, una asistente de estudio experta inspirada en NotebookLM.
+Tu objetivo principal es responder a las preguntas del estudiante basándote ESTRICTAMENTE en las fuentes de texto proporcionadas a continuación.
+Si te hacen una pregunta que no se puede responder con las fuentes, debes aclarar amablemente que la información no está en los documentos seleccionados.
 
-TEXTO DE LOS APUNTES:
+FUENTES DE ESTUDIO SELECCIONADAS:
 -----------------------
-\${pdfText}
+\${sourcesText}
 -----------------------
 `,
-        temperature: 0.3,
+        temperature: 0.2,
       }
     });
 
     return response.text || "Lo siento, no pude generar una respuesta.";
   } catch (error: any) {
     console.error("Error from Gemini API:", error);
+    if (error.message && error.message.includes("leaked")) {
+      throw new Error("⚠️ Tu clave de Gemini (API KEY) ha sido reportada como filtrada o comprometida por Google. Ve a Google AI Studio, genera una nueva clave y actualízala en el panel 'Settings' o 'Secrets' de la izquierda.");
+    }
     throw new Error(error.message || "Error al conectar con la IA de Gemini.");
+  }
+}
+
+export async function generateStudioContent(type: 'resumen' | 'cuestionario' | 'tips' | 'analisis', contextText: string): Promise<string> {
+  let prompt = "";
+  if (type === 'resumen') {
+    prompt = `Genera un resumen ejecutivo estructurado con viñetas, destacando los puntos más críticos de las siguientes fuentes:\n\n\${contextText}`;
+  } else if (type === 'cuestionario') {
+    prompt = `Genera un cuestionario de estudio desafiante (mínimo 5 preguntas de opción múltiple o desarrollo) basado en las siguientes fuentes. Asegúrate de incluir una sección de Respuestas Correctas al final:\n\n\${contextText}`;
+  } else if (type === 'tips') {
+    prompt = `Extrae la información provista y genera una lista de "Tips de Estudio" y reglas mnemotécnicas para que un estudiante memorice y entienda fácilmente estos conceptos:\n\n\${contextText}`;
+  } else if (type === 'analisis') {
+    prompt = `Realiza un análisis profundo, crítico y conceptual de la información provista en estas fuentes. Compara ideas si es posible y concluye con una perspectiva general:\n\n\${contextText}`;
+  }
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: { temperature: 0.5 }
+    });
+    return response.text || "No se pudo generar el contenido.";
+  } catch (error: any) {
+    console.error("Studio generation error:", error);
+    if (error.message && error.message.includes("leaked")) {
+      throw new Error("⚠️ Tu clave de Gemini (API KEY) ha sido reportada como filtrada. Genera una nueva clave y actualízala.");
+    }
+    throw new Error("No se pudo generar el contenido de estudio.");
   }
 }
 
@@ -75,6 +106,9 @@ export async function generateHtmlInfographic(topic: string, pdfText?: string): 
     return html;
   } catch (error: any) {
     console.error("Infographic generation error:", error);
+    if (error.message && error.message.includes("leaked")) {
+      throw new Error("⚠️ Tu clave de Gemini (API KEY) ha sido reportada como filtrada. Genera una nueva clave y actualízala.");
+    }
     throw new Error("No se pudo generar la infografía.");
   }
 }
@@ -98,6 +132,9 @@ export async function generateAudioSummary(topic: string, pdfText?: string): Pro
     return response.text || "No se pudo generar el guion para el audio.";
   } catch (error: any) {
     console.error("Audio generation error:", error);
+    if (error.message && error.message.includes("leaked")) {
+      throw new Error("⚠️ Tu clave de Gemini (API KEY) ha sido reportada como filtrada. Genera una nueva clave y actualízala.");
+    }
     throw new Error("No se pudo generar el guion.");
   }
 }
