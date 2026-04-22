@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { DriveFile, getStudyFiles, getFileDownloadUrl } from "../services/driveService";
-import { extractTextFromPdfUrl } from "../services/pdfService";
+import { extractTextFromPdfUrl, extractTextFromPdfArrayBuffer } from "../services/pdfService";
 import { askGeminiAboutSources, generateStudioContent, generateSuggestedQuestions, ChatMessage } from "../services/geminiService";
 import { 
   FileText, Loader2, AlertCircle, Send, Bot, User as UserIcon, 
@@ -180,8 +180,8 @@ export default function BaseDeConocimiento() {
       } else {
         const file = source.data;
         if (file.type === 'application/pdf') {
-          const url = URL.createObjectURL(file);
-          text = await extractTextFromPdfUrl(url);
+          const arrayBuffer = await file.arrayBuffer();
+          text = await extractTextFromPdfArrayBuffer(arrayBuffer);
         } else if (file.type === 'text/plain') {
           text = await file.text();
         } else {

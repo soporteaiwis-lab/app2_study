@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { LayoutDashboard, Library, CheckSquare, Sparkles, Menu, X, LogIn, LogOut } from "lucide-react";
+import { LayoutDashboard, Library, CheckSquare, Sparkles, Menu, X, LogIn, LogOut, Cloud, BookOpen, GraduationCap } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../providers/AuthProvider";
 
@@ -14,6 +14,12 @@ export function Layout() {
     { name: "Canvas IA", href: "/canvas", icon: Sparkles },
   ];
 
+  const externalLinks = [
+    { name: "Drive de Fuentes", href: "https://drive.google.com/drive/folders/1HmB4SVm7WraN-4ELBxaEm3RcTjZ9t8Vq", icon: Cloud },
+    { name: "NotebookLM", href: "https://notebooklm.google.com/notebook/536ab9bb-432f-4a27-9565-cf9b1baabe48", icon: BookOpen },
+    { name: "IPLACEX", href: "https://www.iplacex.cl", icon: GraduationCap },
+  ];
+
   return (
     <div className="flex flex-col md:flex-row h-screen bg-gray-50 overflow-hidden">
       {/* Desktop Sidebar (hidden on mobile) */}
@@ -22,6 +28,7 @@ export function Layout() {
           <span className="text-xl font-bold text-gray-800">Gilda Study v2</span>
         </div>
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+          <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 mt-2 px-4">Estudio IA</div>
           {navigation.map((item) => {
             const isActive = location.pathname === item.href;
             return (
@@ -39,6 +46,20 @@ export function Layout() {
               </Link>
             );
           })}
+          
+          <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 mt-8 px-4">Herramientas Externas</div>
+          {externalLinks.map((item) => (
+             <a
+               key={item.name}
+               href={item.href}
+               target="_blank"
+               rel="noopener noreferrer"
+               className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+             >
+               <item.icon size={18} className="text-indigo-400" />
+               {item.name}
+             </a>
+          ))}
         </nav>
         
         <div className="p-4 border-t border-gray-200 shrink-0">
@@ -89,34 +110,30 @@ export function Layout() {
       {/* Mobile Bottom Navigation (hidden on desktop) */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 safe-area-pb">
         <nav className="flex items-center justify-around h-16">
-          {navigation.map((item) => {
-            const isActive = location.pathname === item.href;
-            return (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${
-                  isActive ? "text-blue-600" : "text-gray-500 hover:text-gray-900"
-                }`}
-              >
-                <item.icon size={20} className={isActive ? "text-blue-600" : "text-gray-500"} />
-                <span className="text-[10px] font-medium">{item.name}</span>
-              </Link>
-            );
-          })}
+          <Link to="/" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${location.pathname === '/' ? "text-blue-600" : "text-gray-500"}`}>
+             <LayoutDashboard size={20} />
+             <span className="text-[10px] font-medium">Panel</span>
+          </Link>
+          <Link to="/conocimiento" className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${location.pathname === '/conocimiento' ? "text-blue-600" : "text-gray-500"}`}>
+             <Library size={20} />
+             <span className="text-[10px] font-medium">Estudio</span>
+          </Link>
+          <a href="https://drive.google.com/drive/folders/1HmB4SVm7WraN-4ELBxaEm3RcTjZ9t8Vq" target="_blank" rel="noreferrer" className="flex flex-col items-center justify-center w-full h-full space-y-1 text-gray-500">
+             <Cloud size={20} className="text-indigo-400"/>
+             <span className="text-[10px] font-medium">Drive</span>
+          </a>
+          <a href="https://notebooklm.google.com/notebook/536ab9bb-432f-4a27-9565-cf9b1baabe48" target="_blank" rel="noreferrer" className="flex flex-col items-center justify-center w-full h-full space-y-1 text-gray-500">
+             <BookOpen size={20} className="text-indigo-400"/>
+             <span className="text-[10px] font-medium">N.Book</span>
+          </a>
+          
           {user ? (
-            <button 
-              onClick={logOut}
-              className="flex flex-col items-center justify-center w-full h-full space-y-1 text-gray-500 hover:text-red-600"
-            >
+            <button onClick={logOut} className="flex flex-col items-center justify-center w-full h-full space-y-1 text-gray-500 hover:text-red-600">
               <LogOut size={20} />
               <span className="text-[10px] font-medium">Salir</span>
             </button>
           ) : (
-            <button 
-              onClick={signIn}
-              className="flex flex-col items-center justify-center w-full h-full space-y-1 text-blue-600"
-            >
+            <button onClick={signIn} className="flex flex-col items-center justify-center w-full h-full space-y-1 text-blue-600">
               <LogIn size={20} />
               <span className="text-[10px] font-medium">Entrar</span>
             </button>
