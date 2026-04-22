@@ -338,7 +338,7 @@ export default function BaseDeConocimiento() {
   };
 
   return (
-    <div className={`flex flex-col h-[calc(100vh-6rem)] -mt-2 transition-colors duration-500 ${themeClasses.bg} p-2 sm:p-4 rounded-xl relative overflow-hidden`}>
+    <div className={`flex flex-col h-auto lg:h-[calc(100vh-6rem)] -mt-2 transition-colors duration-500 ${themeClasses.bg} p-2 sm:p-4 rounded-xl relative overflow-hidden`}>
       
       {/* Background Decorations */}
       <div className="absolute top-10 left-10 text-indigo-500/10 pointer-events-none">
