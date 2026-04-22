@@ -1,0 +1,66 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Primitives
+    function isValidId(id) { 
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
+    }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isSignedIn() { return request.auth != null; }
+
+    // Validation Blueprint for Task
+    function isValidTask(data) {
+      return data.keys().hasAll(['title', 'completed', 'ownerId', 'createdAt', 'updatedAt'])
+        && data.keys().size() == 5
+        && data.title is string && data.title.size() > 0 && data.title.size() <= 200
+        && data.completed is bool
+        && data.ownerId == request.auth.uid
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    match /tasks/{taskId} {
+      // Create: user must be signed in, payload must strictly match Task definition, and id must be valid.
+      allow create: if isSignedIn() 
+                    && isValidId(taskId)
+                    && isValidTask(incoming())
+                    && incoming().createdAt == request.time
+                    && incoming().updatedAt == request.time;
+      
+      // Update: user must own the task, ID valid, update must preserve immutable fields, and status toggles or text change
+      allow update: if isSignedIn()
+                    && isValidId(taskId)
+                    && existing().ownerId == request.auth.uid
+                    && incoming().ownerId == existing().ownerId
+                    && incoming().createdAt == existing().createdAt
+                    && incoming().updatedAt == request.time
+                    && (
+                      incoming().diff(existing()).affectedKeys().hasOnly(['completed', 'updatedAt']) ||
+                      incoming().diff(existing()).affectedKeys().hasOnly(['title', 'updatedAt']) ||
+                      incoming().diff(existing()).affectedKeys().hasOnly(['title', 'completed', 'updatedAt'])
+                    )
+                    // The schema validity constraint for sizes/types (Note: not calling isValidTask since size() on map.keys fails for hasAll during partial updates, so we apply precise key diffs instead, but we ensure field types)
+                    && incoming().title is string && incoming().title.size() > 0 && incoming().title.size() <= 200
+                    && incoming().completed is bool;
+
+      // Delete: must own the task
+      allow delete: if isSignedIn() 
+                    && isValidId(taskId)
+                    && existing().ownerId == request.auth.uid;
+      
+      // Read: List and Get requires checking ownership
+      allow get: if isSignedIn() 
+                 && isValidId(taskId)
+                 && resource.data.ownerId == request.auth.uid;
+                 
+      allow list: if isSignedIn() 
+                  && resource.data.ownerId == request.auth.uid;
+    }
+  }
+}

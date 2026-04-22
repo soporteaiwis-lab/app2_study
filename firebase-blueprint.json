@@ -1,0 +1,38 @@
+{
+  "entities": {
+    "Task": {
+      "title": "Task",
+      "description": "Una tarea pendiente del estudiante",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Título de la tarea"
+        },
+        "completed": {
+          "type": "boolean"
+        },
+        "ownerId": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["title", "completed", "ownerId", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/tasks/{taskId}": {
+      "schema": {
+        "$ref": "#/entities/Task"
+      },
+      "description": "Colección de tareas asignadas al usuario"
+    }
+  }
+}

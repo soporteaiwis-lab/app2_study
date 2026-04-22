@@ -1,0 +1,6 @@
+{
+  "name": "Gilda Study App v2.0",
+  "description": "Una plataforma integral de estudio con Firebase, Google Drive y motor RAG con Gemini.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
