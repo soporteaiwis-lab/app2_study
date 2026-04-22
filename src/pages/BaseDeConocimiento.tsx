@@ -6,7 +6,7 @@ import {
   FileText, Loader2, AlertCircle, Send, Bot, User as UserIcon, 
   Upload, Cloud, MonitorUp, CheckSquare, Square, Download, 
   FileCheck, NotebookPen, FileQuestion, Sparkles, BrainCircuit,
-  Infinity as InfinityIcon, Moon, Sun, Printer
+  Infinity as InfinityIcon, Moon, Sun, Printer, ExternalLink, GraduationCap
 } from "lucide-react";
 import { useAuth } from "../providers/AuthProvider";
 
@@ -179,10 +179,14 @@ export default function BaseDeConocimiento() {
         }
       } else {
         const file = source.data;
-        if (file.type === 'application/pdf') {
+        // iOS Safari sometimes drops the mime type of local files, so we MUST check the name too
+        const isLocalPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+        const isLocalTxt = file.type === 'text/plain' || file.name.toLowerCase().endsWith('.txt');
+        
+        if (isLocalPdf) {
           const buffer = await file.arrayBuffer();
           text = await extractTextFromPdfBuffer(buffer);
-        } else if (file.type === 'text/plain') {
+        } else if (isLocalTxt) {
           text = await file.text();
         } else {
           text = `[Archivo Local: ${source.name}]\nContenido multimedia o formato cerrado.`;
@@ -449,7 +453,26 @@ export default function BaseDeConocimiento() {
             )}
           </div>
 
-          <div className={`p-4 border-t ${isDark ? 'border-slate-700' : 'border-gray-100'} shrink-0`}>
+          <div className={`p-4 border-t flex flex-col gap-3 ${isDark ? 'border-slate-700' : 'border-gray-100'} shrink-0`}>
+             <div className="flex flex-col gap-2">
+                <p className={`text-[10px] font-bold uppercase tracking-wider ${themeClasses.textMuted}`}>Accesos Rápidos</p>
+                <a href="https://drive.google.com/drive/folders/1HmB4SVm7WraN-4ELBxaEm3RcTjZ9t8Vq" target="_blank" rel="noopener noreferrer" className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-colors border ${isDark ? 'border-slate-700 bg-slate-800 text-cyan-400 hover:bg-slate-700' : 'border-gray-200 bg-white text-cyan-600 hover:bg-cyan-50'}`}>
+                  <Cloud size={14} className="shrink-0" />
+                  <span className="truncate">Mi Carpeta Drive</span>
+                  <ExternalLink size={12} className="ml-auto shrink-0 opacity-50" />
+                </a>
+                <a href="https://notebooklm.google.com/notebook/536ab9bb-432f-4a27-9565-cf9b1baabe48" target="_blank" rel="noopener noreferrer" className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-colors border ${isDark ? 'border-slate-700 bg-slate-800 text-pink-400 hover:bg-slate-700' : 'border-gray-200 bg-white text-pink-600 hover:bg-pink-50'}`}>
+                  <BrainCircuit size={14} className="shrink-0" />
+                  <span className="truncate">NotebookLM AI</span>
+                  <ExternalLink size={12} className="ml-auto shrink-0 opacity-50" />
+                </a>
+                <a href="https://www.iplacex.cl" target="_blank" rel="noopener noreferrer" className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-colors border ${isDark ? 'border-slate-700 bg-slate-800 text-indigo-400 hover:bg-slate-700' : 'border-gray-200 bg-white text-indigo-600 hover:bg-indigo-50'}`}>
+                  <GraduationCap size={14} className="shrink-0" />
+                  <span className="truncate">Portal IPLACEX</span>
+                  <ExternalLink size={12} className="ml-auto shrink-0 opacity-50" />
+                </a>
+             </div>
+             <div className="h-px w-full bg-gradient-to-r from-transparent via-gray-300 dark:via-slate-600 to-transparent my-1"></div>
              <input type="file" multiple ref={fileInputRef} onChange={handleLocalUpload} className="hidden" accept=".pdf,.txt,.doc,.docx" />
              <button onClick={() => fileInputRef.current?.click()} className={`w-full flex items-center justify-center gap-2 py-3 border border-dashed rounded-xl text-sm font-medium transition-colors ${isDark ? 'border-slate-600 text-gray-300 hover:bg-slate-700' : 'border-gray-300 text-gray-600 hover:bg-gray-50'}`}>
                <Upload size={16} /> Carga Local Rapida
@@ -661,13 +684,13 @@ export default function BaseDeConocimiento() {
                })}
             </div>
 
-            <div className={`flex-1 overflow-y-auto p-6 text-sm font-mono ${isDark ? 'text-gray-300 bg-slate-900' : 'text-gray-800 bg-gray-50/50'}`}>
-               <pre className="whitespace-pre-wrap">
+            <div className={`flex-1 overflow-y-auto p-4 md:p-6 text-sm font-mono ${isDark ? 'text-gray-300 bg-slate-900' : 'text-gray-800 bg-gray-50/50'}`}>
+               <div className="whitespace-pre-wrap break-words max-w-full overflow-x-hidden">
                  {sources.filter(s => selectedIds.has(s.id)).length === 0 
                     ? "No hay fuentes seleccionadas."
                     : (sources.find(s => s.id === (activeMemoryTab || Array.from(selectedIds)[0]))?.extractedText || "[Texto pendiente o archivo no extraíble]")
                  }
-               </pre>
+               </div>
             </div>
           </div>
         </div>
