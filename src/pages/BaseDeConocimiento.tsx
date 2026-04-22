@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { DriveFile, getStudyFiles, getFileDownloadUrl } from "../services/driveService";
 import { extractTextFromPdfUrl } from "../services/pdfService";
 import { askGeminiAboutPdf, ChatMessage } from "../services/geminiService";

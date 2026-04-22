@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 export interface DriveFile {
   id: string;
   name: string;

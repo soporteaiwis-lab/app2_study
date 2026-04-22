@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useTasks } from "../hooks/useTasks";
 import { CheckCircle2, Circle, Trash2, Plus, Loader2 } from "lucide-react";
 
