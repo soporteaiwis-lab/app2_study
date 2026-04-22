@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { DriveFile, getStudyFiles, getFileDownloadUrl } from "../services/driveService";
-import { extractTextFromPdfUrl, extractTextFromPdfArrayBuffer } from "../services/pdfService";
+import { extractTextFromPdfUrl, extractTextFromPdfBuffer } from "../services/pdfService";
 import { askGeminiAboutSources, generateStudioContent, generateSuggestedQuestions, ChatMessage } from "../services/geminiService";
 import { 
   FileText, Loader2, AlertCircle, Send, Bot, User as UserIcon, 
@@ -180,8 +180,8 @@ export default function BaseDeConocimiento() {
       } else {
         const file = source.data;
         if (file.type === 'application/pdf') {
-          const arrayBuffer = await file.arrayBuffer();
-          text = await extractTextFromPdfArrayBuffer(arrayBuffer);
+          const buffer = await file.arrayBuffer();
+          text = await extractTextFromPdfBuffer(buffer);
         } else if (file.type === 'text/plain') {
           text = await file.text();
         } else {
@@ -349,12 +349,12 @@ export default function BaseDeConocimiento() {
       </div>
 
       {/* Header */}
-      <div className="mb-4 shrink-0 flex items-center justify-between relative z-10 p-2">
+      <div className="mb-4 shrink-0 flex flex-col items-start md:flex-row md:items-center justify-between relative z-10 p-2 gap-4">
         <div>
           <h1 className={`text-2xl font-bold tracking-tight ${themeClasses.textMain} flex items-center gap-2`}>
             Estudio RAG Multifuente <Sparkles className="text-yellow-400" size={20} />
           </h1>
-          <div className="flex items-center gap-3 mt-1">
+          <div className="flex flex-wrap items-center gap-3 mt-2">
              <p className={`text-sm ${themeClasses.textMuted}`}>Analiza tus recursos como un experto.</p>
              <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700">
                <span className={`text-[11px] font-bold ${enableSuggestions ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-500'}`}>Sugerencias IA</span>
@@ -369,9 +369,9 @@ export default function BaseDeConocimiento() {
         </div>
         
         {/* Actions / Theme Toggle */}
-        <div className="flex gap-2">
-           <button onClick={() => setShowMemoryModal(true)} disabled={selectedIds.size === 0} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${isDark ? 'bg-indigo-500/20 text-indigo-300' : 'bg-indigo-50 text-indigo-600'}`}>Ver Memoria Extraída</button>
-           <button onClick={() => setMessages([])} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${isDark ? 'bg-red-500/20 text-red-400' : 'bg-red-50 text-red-600'}`}>Limpiar Chat</button>
+        <div className="flex flex-wrap gap-2 w-full md:w-auto">
+           <button onClick={() => setShowMemoryModal(true)} disabled={selectedIds.size === 0} className={`flex-1 md:flex-none px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${isDark ? 'bg-indigo-500/20 text-indigo-300' : 'bg-indigo-50 text-indigo-600'}`}>Ver Memoria</button>
+           <button onClick={() => setMessages([])} className={`flex-1 md:flex-none px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${isDark ? 'bg-red-500/20 text-red-400' : 'bg-red-50 text-red-600'}`}>Limpiar Chat</button>
            <button 
              onClick={() => setIsDark(!isDark)} 
              className={`p-2 rounded-full transition-colors ${isDark ? 'bg-yellow-500/20 text-yellow-400' : 'bg-slate-200 text-slate-700'}`}
@@ -437,7 +437,7 @@ export default function BaseDeConocimiento() {
                         ) : source.extractedText ? (
                           <span className="text-[10px] text-emerald-500 font-bold tracking-wide">LISTA</span>
                         ) : source.error ? (
-                          <span className="text-[10px] text-red-500 truncate" title={source.error}>Error</span>
+                          <span className="text-[10px] text-red-500 truncate max-w-[120px]" title={source.error}>{source.error}</span>
                         ) : (
                            <span className="text-[10px] opacity-60">Sin analizar</span>
                         )}

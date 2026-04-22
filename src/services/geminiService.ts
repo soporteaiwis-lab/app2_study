@@ -135,10 +135,8 @@ export async function generateHtmlInfographic(topic: string, pdfText?: string): 
       1. SÓLO debes devolver código HTML. Nada de backticks, bloques de markdown (como \`\`\`html), explicaciones previas ni texto posterior. Solo el HTML crudo.
       2. No uses iframes, el HTML resultante se inyectará en un contenedor div o iframe con srcDoc.
       3. Importa Tailwind desde 'https://cdn.tailwindcss.com'. Usa colores vibrantes (como paletas blue/indigo/purple).
-      4. Haz que contenga un Hero section bonito y un grid tipo BENTO o tarjetas con los puntos clave.
-      5. PROHIBIDO FIRMAR EL DOCUMENTO NI INCLUIR LOGOTIPOS GIGANTES, BRANDING O MARCAS DE AGUA TIPO "Ai-generated". 
-      6. Si usas recursos SVG nativos, ESTRICTAMENTE deben ser ICONOS PEQUEÑOS decorativos (siempre limitados con clases de tamaño como w-6 h-6 o w-8 h-8). JAMAS devuelvas un SVG inmenso que ocupe todo el ancho.
-      7. Tiene que ser responsivo y verse extremadamente moderno y limpio.
+      4. Haz que contenga un Hero section bonito, un grid tipo BENTO o tarjetas con los puntos clave, y buenos iconos (puedes usar SVG nativos).
+      5. Tiene que ser responsivo y verse extremadamente moderno.
       `,
       config: {
         temperature: 0.7,
