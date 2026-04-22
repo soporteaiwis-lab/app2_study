@@ -54,10 +54,12 @@ export default function BaseDeConocimiento() {
   
   // Nuevo modal
   const [showMemoryModal, setShowMemoryModal] = useState(false);
+  const [activeMemoryTab, setActiveMemoryTab] = useState<string | null>(null);
 
   // Studio (Generador)
   const [studioResult, setStudioResult] = useState<{type: string, content: string} | null>(null);
   const [isGeneratingStudio, setIsGeneratingStudio] = useState(false);
+  const [enableSuggestions, setEnableSuggestions] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // PERSISTENCE: Cargar mensajes e IDs al iniciar
@@ -127,6 +129,10 @@ export default function BaseDeConocimiento() {
   };
 
   const processSuggestions = async (context: string) => {
+    if (!enableSuggestions) {
+      setSuggestedQuestions([]);
+      return;
+    }
     setIsGeneratingQuestions(true);
     setSuggestedQuestions([]);
     const qs = await generateSuggestedQuestions(context);
@@ -348,7 +354,18 @@ export default function BaseDeConocimiento() {
           <h1 className={`text-2xl font-bold tracking-tight ${themeClasses.textMain} flex items-center gap-2`}>
             Estudio RAG Multifuente <Sparkles className="text-yellow-400" size={20} />
           </h1>
-          <p className={`text-sm ${themeClasses.textMuted}`}>Selecciona recursos y pídele a Gilda que analice todo a la vez.</p>
+          <div className="flex items-center gap-3 mt-1">
+             <p className={`text-sm ${themeClasses.textMuted}`}>Analiza tus recursos como un experto.</p>
+             <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700">
+               <span className={`text-[11px] font-bold ${enableSuggestions ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-500'}`}>Sugerencias IA</span>
+               <button 
+                 onClick={() => setEnableSuggestions(!enableSuggestions)}
+                 className={`relative inline-flex h-4 w-8 items-center rounded-full transition-colors ${enableSuggestions ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+               >
+                 <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${enableSuggestions ? 'translate-x-4' : 'translate-x-1'}`} />
+               </button>
+             </div>
+          </div>
         </div>
         
         {/* Actions / Theme Toggle */}
@@ -565,6 +582,12 @@ export default function BaseDeConocimiento() {
                      <Sparkles size={20} className="text-orange-500" /> Análisis Profundo
                    </button>
                  </div>
+                 <div className="mt-4 p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-center">
+                    <p className={`text-[11px] ${isDark ? 'text-cyan-400' : 'text-cyan-700'}`}>
+                      <strong>Nota:</strong> Los resultados se generan leyendo exclusivamente el contexto disponible en la 
+                      <button onClick={() => setShowMemoryModal(true)} disabled={!hasSelectedSources} className="underline ml-1 font-bold">Memoria Extraída</button>.
+                    </p>
+                 </div>
                </>
              )}
 
@@ -611,18 +634,40 @@ export default function BaseDeConocimiento() {
       {/* MODAL DE MEMORIA */}
       {showMemoryModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm fade-in">
-          <div className={`w-full max-w-4xl max-h-[85vh] rounded-2xl flex flex-col shadow-2xl overflow-hidden ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
-            <div className={`p-4 border-b flex justify-between items-center ${isDark ? 'border-slate-700 bg-slate-800' : 'border-gray-100 bg-gray-50'}`}>
+          <div className={`w-full max-w-5xl h-[85vh] rounded-2xl flex flex-col shadow-2xl overflow-hidden ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
+            <div className={`p-4 border-b flex justify-between items-center ${isDark ? 'border-slate-700 bg-slate-800' : 'border-gray-100 bg-gray-50'} shrink-0`}>
                <div>
                   <h3 className={`font-bold ${themeClasses.textMain}`}>Memoria de Texto Extraído</h3>
-                  <p className={`text-xs ${themeClasses.textMuted}`}>Esto es EXACTAMENTE lo que los modelos de IA están leyendo internamente en este momento.</p>
+                  <p className={`text-xs ${themeClasses.textMuted}`}>Revisa individualmente la transcripción que la IA está usando.</p>
                </div>
                <button onClick={() => setShowMemoryModal(false)} className={`px-4 py-2 text-sm font-medium rounded-lg ${isDark ? 'bg-slate-700 text-white hover:bg-slate-600' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}>
                  Cerrar Visor
                </button>
             </div>
+            
+            {/* TABS DE FUENTES */}
+            <div className={`flex overflow-x-auto hide-scrollbar border-b ${isDark ? 'border-slate-700 bg-slate-800/80' : 'border-gray-200 bg-gray-100/50'} shrink-0`}>
+               {sources.filter(s => selectedIds.has(s.id)).map(source => {
+                 const isActive = activeMemoryTab === source.id || (activeMemoryTab === null && Array.from(selectedIds)[0] === source.id);
+                 return (
+                   <button 
+                     key={source.id} 
+                     onClick={() => setActiveMemoryTab(source.id)}
+                     className={`px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors border-b-2 ${isActive ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400 bg-white dark:bg-slate-800' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
+                   >
+                     {source.name}
+                   </button>
+                 );
+               })}
+            </div>
+
             <div className={`flex-1 overflow-y-auto p-6 text-sm font-mono ${isDark ? 'text-gray-300 bg-slate-900' : 'text-gray-800 bg-gray-50/50'}`}>
-               <pre className="whitespace-pre-wrap">{getCombinedContextText() || "No hay texto extraído aún. Selecciona una fuente."}</pre>
+               <pre className="whitespace-pre-wrap">
+                 {sources.filter(s => selectedIds.has(s.id)).length === 0 
+                    ? "No hay fuentes seleccionadas."
+                    : (sources.find(s => s.id === (activeMemoryTab || Array.from(selectedIds)[0]))?.extractedText || "[Texto pendiente o archivo no extraíble]")
+                 }
+               </pre>
             </div>
           </div>
         </div>

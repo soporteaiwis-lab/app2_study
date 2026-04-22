@@ -34,7 +34,7 @@ Si te hacen una pregunta que no se puede responder con las fuentes, debes aclara
 
 FUENTES DE ESTUDIO SELECCIONADAS:
 -----------------------
-\${sourcesText}
+${sourcesText}
 -----------------------
 `,
         temperature: 0.2,
@@ -64,7 +64,7 @@ REGLA CRÍTICA Y ESTRICTA: NO inventes temas. Las preguntas deben tratar EXACTAM
 Devuelve un arreglo en formato JSON con 3 strings. Ejemplo: ["¿Pregunta 1?", "¿Pregunta 2?", "¿Pregunta 3?"]
 
 FUENTES DE INFORMACIÓN:
-\${contextText.substring(0, 45000)}`;
+${contextText.substring(0, 45000)}`;
     
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
@@ -97,13 +97,13 @@ FUENTES DE INFORMACIÓN:
 export async function generateStudioContent(type: 'resumen' | 'cuestionario' | 'tips' | 'analisis', contextText: string): Promise<string> {
   let prompt = "";
   if (type === 'resumen') {
-    prompt = `Genera un resumen ejecutivo estructurado con viñetas, destacando los puntos más críticos de las siguientes fuentes:\n\n\${contextText}`;
+    prompt = `Genera un resumen ejecutivo estructurado con viñetas, destacando los puntos más críticos de las siguientes fuentes:\n\n${contextText}`;
   } else if (type === 'cuestionario') {
-    prompt = `Genera un cuestionario de estudio desafiante (mínimo 5 preguntas de opción múltiple o desarrollo) basado en las siguientes fuentes. Asegúrate de incluir una sección de Respuestas Correctas al final:\n\n\${contextText}`;
+    prompt = `Genera un cuestionario de estudio desafiante (mínimo 5 preguntas de opción múltiple o desarrollo) basado en las siguientes fuentes. Asegúrate de incluir una sección de Respuestas Correctas al final:\n\n${contextText}`;
   } else if (type === 'tips') {
-    prompt = `Extrae la información provista y genera una lista de "Tips de Estudio" y reglas mnemotécnicas para que un estudiante memorice y entienda fácilmente estos conceptos:\n\n\${contextText}`;
+    prompt = `Extrae la información provista y genera una lista de "Tips de Estudio" y reglas mnemotécnicas para que un estudiante memorice y entienda fácilmente estos conceptos:\n\n${contextText}`;
   } else if (type === 'analisis') {
-    prompt = `Realiza un análisis profundo, crítico y conceptual de la información provista en estas fuentes. Compara ideas si es posible y concluye con una perspectiva general:\n\n\${contextText}`;
+    prompt = `Realiza un análisis profundo, crítico y conceptual de la información provista en estas fuentes. Compara ideas si es posible y concluye con una perspectiva general:\n\n${contextText}`;
   }
 
   try {
