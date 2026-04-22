@@ -390,10 +390,10 @@ export default function BaseDeConocimiento() {
       )}
 
       {/* Grid estilo NotebookLM (3 columnas) */}
-      <div className="flex-1 flex flex-col lg:flex-row gap-4 min-h-0 relative z-10 w-full max-w-full">
+      <div className="flex-1 flex flex-col lg:flex-row gap-4 min-h-0 relative z-10 w-full max-w-full pb-20 md:pb-0">
         
         {/* PANEL IZQUIERDO: FUENTES */}
-        <div className={`w-full lg:w-[25%] ${themeClasses.card} rounded-2xl shadow-lg border flex flex-col min-h-[250px] transition-colors overflow-hidden`}>
+        <div className={`w-full lg:w-[25%] ${themeClasses.card} rounded-2xl shadow-lg border flex flex-col min-h-[350px] lg:min-h-[250px] transition-colors overflow-hidden shrink-0`}>
           <div className={`p-4 border-b flex items-center justify-between ${themeClasses.header} ${isDark?'border-slate-700':'border-gray-100'} shrink-0`}>
             <h2 className={`font-semibold ${themeClasses.textMain} flex items-center gap-2`}>
               <FileCheck size={18} className={isDark ? "text-indigo-400" : "text-indigo-600"} />
@@ -459,7 +459,7 @@ export default function BaseDeConocimiento() {
         </div>
 
         {/* PANEL CENTRAL: CHAT CONSTANTE */}
-        <div className={`w-full lg:w-[45%] ${themeClasses.card} rounded-2xl shadow-lg border flex flex-col min-h-[400px] transition-colors`}>
+        <div className={`w-full lg:w-[45%] ${themeClasses.card} rounded-2xl shadow-lg border flex flex-col min-h-[500px] lg:min-h-[400px] transition-colors shrink-0 lg:shrink`}>
           <div className={`p-4 border-b flex items-center gap-2 ${themeClasses.header} ${isDark?'border-slate-700':'border-gray-100'} rounded-t-2xl shrink-0`}>
              <Bot size={20} className={isDark ? "text-pink-400" : "text-pink-500"} />
              <h2 className={`font-semibold ${themeClasses.textMain}`}>Investigación</h2>
