@@ -38,6 +38,11 @@ export async function getStudyFiles(): Promise<DriveFile[]> {
   }
 }
 
-export async function getFileDownloadUrl(fileId: string): Promise<string> {
+export async function getFileDownloadUrl(fileId: string, mimeType?: string): Promise<string> {
+  // Si es un Google Doc, necesitamos usar el endpoint de exportación a texto plano
+  if (mimeType === 'application/vnd.google-apps.document') {
+    return `https://www.googleapis.com/drive/v3/files/${fileId}/export?mimeType=text/plain&key=${API_KEY}`;
+  }
+  // Para los demás archivos (PDFs) usamos alt=media
   return `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=${API_KEY}`;
 }

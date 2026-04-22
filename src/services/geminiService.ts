@@ -51,6 +51,49 @@ FUENTES DE ESTUDIO SELECCIONADAS:
   }
 }
 
+export async function generateSuggestedQuestions(contextText: string): Promise<string[]> {
+  try {
+    if (!contextText || contextText.trim().length < 50) {
+      return ["¿De qué trata este documento?", "¿Cuáles son los conceptos clave?", "¿Puedes hacerme un resumen?"];
+    }
+
+    const prompt = `Analiza estrictamente el contenido de los siguientes documentos. Extrae los temas principales y formula 3 preguntas muy específicas, interesantes y útiles que alguien podría hacer para estudiar u obtener información de estos textos.
+    
+REGLA CRÍTICA Y ESTRICTA: NO inventes temas. Las preguntas deben tratar EXACTAMENTE sobre la información provista en las fuentes. Por ejemplo, si el texto trata sobre administración de empresas, no preguntes sobre el sistema solar ni astronomía. Asegúrate de comprender de qué hablan los documentos y basa tus preguntas solo en eso.
+
+Devuelve un arreglo en formato JSON con 3 strings. Ejemplo: ["¿Pregunta 1?", "¿Pregunta 2?", "¿Pregunta 3?"]
+
+FUENTES DE INFORMACIÓN:
+\${contextText.substring(0, 45000)}`;
+    
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: { 
+        temperature: 0.1,
+        responseMimeType: "application/json"
+      }
+    });
+    
+    const text = response.text || "[]";
+    let questions: string[] = [];
+    try {
+      questions = JSON.parse(text);
+    } catch(e) {
+      questions = [];
+    }
+    
+    if (Array.isArray(questions) && questions.length > 0) {
+      return questions.filter(q => typeof q === 'string' && q.length > 10).slice(0, 3);
+    }
+
+    return ["¿Puedes resumir las ideas principales?", "¿Cuáles son los temas centrales?", "¿Qué datos clave hay aquí?"];
+  } catch (error: any) {
+    console.error("Suggested questions error:", error);
+    return ["¿Qué nos dicen estos documentos?", "¿Puedes resumir las ideas?", "¿Cuáles son los puntos importantes?"];
+  }
+}
+
 export async function generateStudioContent(type: 'resumen' | 'cuestionario' | 'tips' | 'analisis', contextText: string): Promise<string> {
   let prompt = "";
   if (type === 'resumen') {
